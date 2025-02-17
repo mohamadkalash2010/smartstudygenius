@@ -1,14 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Book, Brain, FileText, Lightbulb, Rocket } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface StudyConfig {
   topic: string;
   duration: string;
   lessons: string;
+}
+
+interface StudyPlan {
+  days: StudyDay[];
+  resources: Resource[];
+}
+
+interface StudyDay {
+  day: number;
+  tasks: string[];
+  quiz: boolean;
+  review: boolean;
+}
+
+interface Resource {
+  title: string;
+  url: string;
+  type: 'article' | 'video' | 'tutorial';
 }
 
 const Index = () => {
@@ -115,53 +134,120 @@ const FeatureCard = ({ icon, title, description }: {
   </Card>
 );
 
-const Dashboard = ({ studyConfig }: { studyConfig: StudyConfig }) => (
-  <div className="space-y-6 fade-in">
-    <header className="flex justify-between items-center">
-      <div className="space-y-1">
-        <h2 className="text-3xl font-bold">Studying: {studyConfig.topic}</h2>
-        <p className="text-muted-foreground">Duration: {studyConfig.duration} • Lessons: {studyConfig.lessons}</p>
-      </div>
-      <Button variant="outline" onClick={() => window.location.reload()}>
-        New Study Plan
-      </Button>
-    </header>
+const Dashboard = ({ studyConfig }: { studyConfig: StudyConfig }) => {
+  const { data: studyPlan, isLoading } = useQuery({
+    queryKey: ['studyPlan', studyConfig],
+    queryFn: async () => {
+      const response = await fetch('/api/generate-study-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(studyConfig),
+      });
+      if (!response.ok) throw new Error('Failed to generate study plan');
+      return response.json();
+    },
+    enabled: !!studyConfig.topic,
+  });
 
-    <div className="grid md:grid-cols-2 gap-6">
-      <Card className="p-6 glass-card">
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Book className="w-5 h-5" /> Study Plan
-          </h3>
-          <p className="text-muted-foreground">
-            Your personalized study plan is being generated...
-          </p>
-          <Progress value={33} className="w-full" />
+  const { data: resources, isLoading: loadingResources } = useQuery({
+    queryKey: ['resources', studyConfig],
+    queryFn: async () => {
+      const response = await fetch('/api/fetch-resources', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(studyConfig),
+      });
+      if (!response.ok) throw new Error('Failed to fetch resources');
+      return response.json();
+    },
+    enabled: !!studyConfig.topic,
+  });
+
+  const durationInDays = parseInt(studyConfig.duration);
+  const lessonsList = studyConfig.lessons.split(',').map(lesson => lesson.trim());
+
+  return (
+    <div className="space-y-6 fade-in">
+      <header className="flex justify-between items-center">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-bold">Studying: {studyConfig.topic}</h2>
+          <p className="text-muted-foreground">Duration: {studyConfig.duration} • Lessons: {studyConfig.lessons}</p>
         </div>
-      </Card>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          New Study Plan
+        </Button>
+      </header>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card className="p-6 glass-card">
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <Book className="w-5 h-5" /> Study Plan
+            </h3>
+            {isLoading ? (
+              <Progress value={33} className="w-full" />
+            ) : (
+              <div className="space-y-4">
+                {studyPlan?.days.map((day: StudyDay, index: number) => (
+                  <div key={index} className="p-4 bg-secondary/50 rounded-lg">
+                    <h4 className="font-semibold mb-2">Day {day.day}</h4>
+                    <ul className="space-y-2">
+                      {day.tasks.map((task, taskIndex) => (
+                        <li key={taskIndex} className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          {task}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6 glass-card">
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <Lightbulb className="w-5 h-5" /> Quick Quiz
+            </h3>
+            <p className="text-muted-foreground">
+              Test your knowledge on {lessonsList[0]}
+            </p>
+            <Button className="w-full bg-primary hover:bg-primary/90">Start Quiz</Button>
+          </div>
+        </Card>
+      </div>
 
       <Card className="p-6 glass-card">
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Lightbulb className="w-5 h-5" /> Quick Quiz
-          </h3>
-          <p className="text-muted-foreground">
-            Test your knowledge with an AI-generated quiz
-          </p>
-          <Button className="w-full bg-primary hover:bg-primary/90">Start Quiz</Button>
+        <h3 className="text-xl font-semibold mb-4">Learning Resources</h3>
+        <div className="grid md:grid-cols-3 gap-4">
+          {loadingResources ? (
+            Array(3).fill(0).map((_, i) => (
+              <div key={i} className="h-32 bg-secondary rounded-lg animate-pulse" />
+            ))
+          ) : (
+            resources?.map((resource: Resource, index: number) => (
+              <a
+                key={index}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-4 bg-secondary/50 rounded-lg hover:bg-secondary/70 transition-colors"
+              >
+                <h4 className="font-semibold mb-2">{resource.title}</h4>
+                <p className="text-sm text-muted-foreground capitalize">{resource.type}</p>
+              </a>
+            ))
+          )}
         </div>
       </Card>
     </div>
-
-    <Card className="p-6 glass-card">
-      <h3 className="text-xl font-semibold mb-4">Learning Resources</h3>
-      <div className="grid md:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-32 bg-secondary rounded-lg animate-pulse" />
-        ))}
-      </div>
-    </Card>
-  </div>
-);
+  );
+};
 
 export default Index;
