@@ -9,7 +9,144 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      quizzes: {
+        Row: {
+          created_at: string | null
+          id: string
+          lesson: string
+          plan_id: string | null
+          questions: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lesson: string
+          plan_id?: string | null
+          questions: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lesson?: string
+          plan_id?: string | null
+          questions?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          created_at: string | null
+          id: string
+          lesson: string
+          plan_id: string | null
+          title: string
+          type: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lesson: string
+          plan_id?: string | null
+          title: string
+          type?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lesson?: string
+          plan_id?: string | null
+          title?: string
+          type?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_days: {
+        Row: {
+          created_at: string | null
+          day_number: number
+          has_quiz: boolean | null
+          has_review: boolean | null
+          id: string
+          plan_id: string | null
+          tasks: string[]
+        }
+        Insert: {
+          created_at?: string | null
+          day_number: number
+          has_quiz?: boolean | null
+          has_review?: boolean | null
+          id?: string
+          plan_id?: string | null
+          tasks: string[]
+        }
+        Update: {
+          created_at?: string | null
+          day_number?: number
+          has_quiz?: boolean | null
+          has_review?: boolean | null
+          id?: string
+          plan_id?: string | null
+          tasks?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_days_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_plans: {
+        Row: {
+          created_at: string | null
+          duration: string
+          id: string
+          lessons: string[]
+          topic: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration: string
+          id?: string
+          lessons: string[]
+          topic: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration?: string
+          id?: string
+          lessons?: string[]
+          topic?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
