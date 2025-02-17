@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,12 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Book, Brain, FileText, Lightbulb, Rocket } from "lucide-react";
 
+interface StudyConfig {
+  topic: string;
+  duration: string;
+  lessons: string;
+}
+
 const Index = () => {
-  const [topic, setTopic] = useState("");
+  const [studyConfig, setStudyConfig] = useState<StudyConfig>({
+    topic: "",
+    duration: "",
+    lessons: ""
+  });
   const [showDashboard, setShowDashboard] = useState(false);
 
   const handleStartStudying = () => {
-    if (topic.trim()) {
+    if (studyConfig.topic.trim() && studyConfig.duration.trim() && studyConfig.lessons.trim()) {
       setShowDashboard(true);
     }
   };
@@ -21,27 +30,47 @@ const Index = () => {
       <main className="container max-w-7xl mx-auto space-y-8">
         {!showDashboard ? (
           <div className="space-y-8 fade-in">
-            <section className="text-center space-y-4 py-20">
-              <h1 className="text-5xl font-bold tracking-tight">
-                SmartStudyBot.ai
-              </h1>
+            <section className="text-center space-y-4 py-12">
+              <div className="flex justify-center mb-8">
+                <img 
+                  src="/lovable-uploads/9b502ecd-6762-4be7-815a-ba58aa69b2d5.png" 
+                  alt="SmartStudyBot.AI Logo" 
+                  className="h-24 mb-4"
+                />
+              </div>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Your AI-powered study assistant for personalized learning and exam preparation
               </p>
               <div className="max-w-md mx-auto space-y-4 pt-8">
-                <Input
-                  type="text"
-                  placeholder="Enter your study topic..."
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="text-lg"
-                />
+                <div className="space-y-4">
+                  <Input
+                    type="text"
+                    placeholder="What topic would you like to study?"
+                    value={studyConfig.topic}
+                    onChange={(e) => setStudyConfig({...studyConfig, topic: e.target.value})}
+                    className="text-lg"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="How long do you have to study? (e.g., 2 weeks)"
+                    value={studyConfig.duration}
+                    onChange={(e) => setStudyConfig({...studyConfig, duration: e.target.value})}
+                    className="text-lg"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Which lessons do you need to cover?"
+                    value={studyConfig.lessons}
+                    onChange={(e) => setStudyConfig({...studyConfig, lessons: e.target.value})}
+                    className="text-lg"
+                  />
+                </div>
                 <Button
                   onClick={handleStartStudying}
-                  className="w-full hover-lift"
+                  className="w-full hover-lift bg-primary hover:bg-primary/90"
                   size="lg"
                 >
-                  Start Studying
+                  Create Study Plan
                 </Button>
               </div>
             </section>
@@ -65,7 +94,7 @@ const Index = () => {
             </section>
           </div>
         ) : (
-          <Dashboard topic={topic} />
+          <Dashboard studyConfig={studyConfig} />
         )}
       </main>
     </div>
@@ -86,12 +115,15 @@ const FeatureCard = ({ icon, title, description }: {
   </Card>
 );
 
-const Dashboard = ({ topic }: { topic: string }) => (
+const Dashboard = ({ studyConfig }: { studyConfig: StudyConfig }) => (
   <div className="space-y-6 fade-in">
     <header className="flex justify-between items-center">
-      <h2 className="text-3xl font-bold">Studying: {topic}</h2>
+      <div className="space-y-1">
+        <h2 className="text-3xl font-bold">Studying: {studyConfig.topic}</h2>
+        <p className="text-muted-foreground">Duration: {studyConfig.duration} • Lessons: {studyConfig.lessons}</p>
+      </div>
       <Button variant="outline" onClick={() => window.location.reload()}>
-        New Topic
+        New Study Plan
       </Button>
     </header>
 
@@ -116,7 +148,7 @@ const Dashboard = ({ topic }: { topic: string }) => (
           <p className="text-muted-foreground">
             Test your knowledge with an AI-generated quiz
           </p>
-          <Button className="w-full">Start Quiz</Button>
+          <Button className="w-full bg-primary hover:bg-primary/90">Start Quiz</Button>
         </div>
       </Card>
     </div>
