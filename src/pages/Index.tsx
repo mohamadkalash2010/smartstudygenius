@@ -1,14 +1,10 @@
-
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Book, Brain, FileText, Lightbulb, Rocket, LogOut } from "lucide-react";
+import { Book, Brain, FileText, Lightbulb, Rocket } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 interface StudyConfig {
   topic: string;
@@ -35,32 +31,12 @@ interface Resource {
 }
 
 const Index = () => {
-  const [session, setSession] = useState(null);
   const [studyConfig, setStudyConfig] = useState<StudyConfig>({
     topic: "",
     duration: "",
     lessons: ""
   });
   const [showDashboard, setShowDashboard] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (!session) {
-    return <Navigate to="/auth" replace />;
-  }
 
   const handleStartStudying = () => {
     if (studyConfig.topic.trim() && studyConfig.duration.trim() && studyConfig.lessons.trim()) {
@@ -68,24 +44,9 @@ const Index = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-  };
-
   return (
     <div className="min-h-screen p-6 bg-gradient-to-b from-background to-secondary">
       <main className="container max-w-7xl mx-auto space-y-8">
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={handleLogout} className="gap-2">
-            <LogOut className="w-4 h-4" />
-            Log Out
-          </Button>
-        </div>
-
         {!showDashboard ? (
           <div className="space-y-8 fade-in">
             <section className="text-center space-y-4 py-12">
